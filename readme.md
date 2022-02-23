@@ -2,7 +2,7 @@
 
 ![MacTube](https://i.imgur.com/IdCeRJF.png)
 
-MacTube is a native YouTube app for Macs. 
+MacTube is a webview wrapper for YouTube for Mac OS. 
 
 It was made for people who prefer Safari and don't want to have to open Chrome just to launch their official web app.
 
