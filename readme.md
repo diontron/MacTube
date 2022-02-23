@@ -2,11 +2,11 @@
 
 ![MacTube](https://i.imgur.com/IdCeRJF.png)
 
-MacTube is a native YouTube app for M1 Macs. 
+MacTube is a native YouTube app for Macs. 
 
 It was made for people who prefer Safari and don't want to have to open Chrome just to launch their official web app.
 
-[Download the latest version here.](https://github.com/diontron/MacTube/releases/download/1.0.0/MacTube.app.zip)
+[Download the latest version here.](https://github.com/diontron/MacTube/releases/download/1.0.1/MacTube.app.zip)
 
 ## Malicious Software Warning
 
