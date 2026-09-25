@@ -1,36 +1,55 @@
-# MacTube 2
+<p align="center">
+  <img src="MacTube/Assets.xcassets/AppIcon.appiconset/81504064a338bd4299acf122b1d1a628_YouTube_1024x1024x32.png" width="180" alt="MacTube 2 icon">
+</p>
 
-Fork of [MacTube](https://github.com/ryan-mangeno/MacTube), a WebKit wrapper for YouTube on macOS, with content filters.
+<h1 align="center">MacTube 2</h1>
 
-## Filters
+<p align="center">
+  YouTube as a real Mac app — without Shorts, without AI slop, without opening Chrome.
+</p>
 
-Menu bar → **Filters** (or **MacTube 2 → Settings…**, ⌘,):
+<p align="center">
+  <a href="https://github.com/depo23/MacTube2/releases/latest/download/MacTube2.dmg"><img src="https://img.shields.io/badge/Download-MacTube%202%20for%20macOS-black?style=for-the-badge&logo=apple" alt="Download MacTube 2"></a>
+</p>
 
-- **Show Shorts** (⇧⌘1) — off hides Shorts shelves, Shorts in feeds/search, the Shorts sidebar entry, and redirects `/shorts/…` to Home.
-- **Show AI Videos** (⇧⌘2) — off blocks videos/Shorts carrying YouTube's AI disclosure label ("Made with AI — Sounds or visuals were altered or fully generated", or the older "Altered or synthetic content"). The video's page is fetched logged-out in English and checked for the label text, so it works whatever your YouTube language is.
-  - A blocked video shows an overlay with **Go back / Next Short** and **Watch anyway**.
-  - Channels caught with a labeled video are remembered and hidden from feeds. **Filters → Forget Learned AI Channels** clears that list.
+<p align="center"><sub>macOS 13 Ventura or later · Apple Silicon & Intel · always the latest build</sub></p>
 
-Limits: YouTube shows no AI label on feed thumbnails, so feed hiding relies on learned channels. Unlabeled AI content isn't detected. YouTube markup changes can break selectors.
+---
 
-## Tabs and links
+## Why MacTube 2
 
-- **⌘T** opens a new native tab (Window → Show Tab Bar / Merge All Windows work as usual); **⌘N** opens a separate window.
-- ⌘-click a YouTube link, or open one that targets a new window, to get it in a new tab.
-- Links leaving YouTube (including YouTube's `redirect?q=` links in descriptions and comments) open in your default browser. Google sign-in stays in the app.
+**Watch what you chose, not what the algorithm pushes.**
 
-## Build
+- **Shorts off, for good.** One switch removes Shorts from your home feed, search results, sidebar and recommendations. Shorts links take you back Home instead of down the scroll hole.
+- **Skip AI-generated videos.** Videos YouTube labels *Made with AI* are stopped before they play. Channels caught posting them disappear from your feed too, so it gets cleaner the more you watch. One click to watch anyway if you want.
+- **Real Mac tabs.** ⌘T opens a new tab, just like Safari. Keep a tutorial, a playlist and a talk open side by side.
+- **Links go where they should.** Links in descriptions and comments open in your default browser — no "Are you sure you want to leave YouTube?" detours.
+- **Feels native.** Its own Dock icon, its own window, light and dark mode, settings remembered between launches.
 
-Requires Xcode and macOS 13+.
+## Controls
 
-```bash
-./build-dmg.sh      # → "MacTube 2.dmg"
-```
+| | Where | Shortcut |
+| --- | --- | --- |
+| Show / hide Shorts | **Filters** menu or **Settings** | ⇧⌘1 |
+| Show / hide AI videos | **Filters** menu or **Settings** | ⇧⌘2 |
+| New tab | **File** menu | ⌘T |
+| New window | **File** menu | ⌘N |
+| Settings | **MacTube 2** menu | ⌘, |
 
-No Xcode? GitHub Actions builds the DMG on every push to `master`: open the repo's **Actions** tab → latest **Build DMG** run → download **MacTube-2-dmg** (a zip containing the DMG). Pushing a tag like `v2.0` also attaches the DMG to a GitHub Release.
+## Install
 
-Or open `MacTube.xcodeproj` and press ⌘R. The app is ad-hoc signed ("Sign to Run Locally"). On first launch from the DMG, right-click → Open, or run `xattr -dr com.apple.quarantine "/Applications/MacTube 2.app"`.
+1. [Download MacTube2.dmg](https://github.com/depo23/MacTube2/releases/latest/download/MacTube2.dmg) and drag **MacTube 2** into Applications.
+2. First launch only: right-click the app → **Open** → **Open**. (It isn't signed with a paid Apple developer account, so macOS asks once.)
 
-## Debugging detection
+## Good to know
 
-On macOS 13.3+ the web view is inspectable: Safari → Develop → [your Mac] → MacTube 2. `window.__mt2` exposes `update({showShorts, showAI})` and `forgetChannels()`; learned channels are in `localStorage['mt2.aiChannels']`.
+- AI detection relies on YouTube's own *Made with AI* label. Videos their creators don't disclose — and YouTube doesn't catch — will still show up.
+- Changed your mind about a channel? **Filters → Forget Learned AI Channels** resets the list.
+
+## Build it yourself
+
+Every push to `master` builds a new release automatically. To build locally (needs Xcode): `./build-dmg.sh`.
+
+---
+
+<sub>Based on [MacTube](https://github.com/ryan-mangeno/MacTube) by Kevin Dion. Not affiliated with YouTube or Google.</sub>

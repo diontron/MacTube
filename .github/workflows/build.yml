@@ -21,11 +21,17 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: MacTube-2-dmg
-          path: MacTube 2.dmg
+          name: MacTube2-dmg
+          path: MacTube2.dmg
 
-      - name: Publish release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Every push to master (or a v* tag) becomes the "latest" release,
+      # so the README download link always points at the newest build.
+      - name: Publish release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          files: MacTube 2.dmg
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('build-{0}', github.run_number) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('Build {0}', github.run_number) }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: MacTube2.dmg
