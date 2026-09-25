@@ -39,7 +39,19 @@
 ## Install
 
 1. [Download MacTube2.dmg](https://github.com/depo23/MacTube2/releases/latest/download/MacTube2.dmg) and drag **MacTube 2** into Applications.
-2. First launch only: right-click the app → **Open** → **Open**. (It isn't signed with a paid Apple developer account, so macOS asks once.)
+2. Open **MacTube 2**. macOS blocks the first launch because the app isn't signed with a paid Apple developer account.
+
+### First launch
+
+1. Open **MacTube 2** once and click **Done** on the warning.
+2. Open **System Settings → Privacy & Security** and scroll down to **Security**.
+3. Next to *"MacTube 2.app" was blocked to protect your Mac*, click **Open Anyway**:
+
+   <img src="docs/open-anyway.png" width="460" alt="Privacy & Security showing Open Anyway for MacTube 2">
+
+4. Confirm with **Open Anyway** and your password or Touch ID.
+
+You only do this once. After that, MacTube 2 opens normally.
 
 ## Good to know
 

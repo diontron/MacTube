@@ -22,32 +22,27 @@ struct ContentView: View {
     var body: some View {
         WebView(webView: browser.webView)
             .background(WindowTabbing())
-            .navigationTitle(browser.title)
+            .navigationTitle("MacTube 2")
+            .navigationSubtitle(browser.title)
             .toolbar {
-                Spacer()
-                
-                Text("MacTube 2")
-                    .padding(.leading, 110)
-                
-                Spacer()
-                
-                Button(action: {
-                    browser.webView.goBack()
-                }, label: {
-                    Image(systemName: "chevron.left")
-                })
-                
-                Button(action: {
-                    browser.webView.goForward()
-                }, label: {
-                    Image(systemName: "chevron.right")
-                })
-                
-                Button(action: {
-                    browser.webView.reload()
-                }, label: {
-                    Image(systemName: "arrow.clockwise")
-                })
+                ToolbarItemGroup(placement: .navigation) {
+                    Button { browser.webView.goBack() } label: {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                    .help("Back")
+
+                    Button { browser.webView.goForward() } label: {
+                        Label("Forward", systemImage: "chevron.right")
+                    }
+                    .help("Forward")
+                }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button { browser.webView.reload() } label: {
+                        Label("Reload", systemImage: "arrow.clockwise")
+                    }
+                    .help("Reload")
+                }
             }
             .background(Color(colorScheme == .dark
                 ? CGColor(red: 0.097, green: 0.097, blue: 0.097, alpha: 1)
@@ -70,7 +65,7 @@ struct ContentView: View {
 /// Owns the web view so it survives SwiftUI re-renders (settings changes).
 final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
     let webView = WKWebView()
-    @Published var title = "MacTube 2"
+    @Published var title = ""
     var openTab: ((URL) -> Void)?
     private var titleObservation: NSKeyValueObservation?
 
@@ -83,8 +78,13 @@ final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDeleg
         webView.uiDelegate = self
         if #available(macOS 13.3, *) { webView.isInspectable = true }
         titleObservation = webView.observe(\.title) { [weak self] webView, _ in
-            let title = webView.title ?? ""
-            DispatchQueue.main.async { self?.title = title.isEmpty ? "MacTube 2" : title }
+            var title = webView.title ?? ""
+            if title.hasSuffix(" - YouTube") { title.removeLast(" - YouTube".count) }
+            DispatchQueue.main.async {
+                self?.title = title
+                // Window title stays "MacTube 2"; tabs show the page so they can be told apart.
+                webView.window?.tab.title = title.isEmpty ? "MacTube 2" : title
+            }
         }
         webView.load(URLRequest(url: url))
     }
