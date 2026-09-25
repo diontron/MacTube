@@ -27,6 +27,8 @@ Requires Xcode and macOS 13+.
 ./build-dmg.sh      # → "MacTube 2.dmg"
 ```
 
+No Xcode? GitHub Actions builds the DMG on every push to `master`: open the repo's **Actions** tab → latest **Build DMG** run → download **MacTube-2-dmg** (a zip containing the DMG). Pushing a tag like `v2.0` also attaches the DMG to a GitHub Release.
+
 Or open `MacTube.xcodeproj` and press ⌘R. The app is ad-hoc signed ("Sign to Run Locally"). On first launch from the DMG, right-click → Open, or run `xattr -dr com.apple.quarantine "/Applications/MacTube 2.app"`.
 
 ## Debugging detection
