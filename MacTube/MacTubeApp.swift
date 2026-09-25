@@ -33,7 +33,6 @@ struct MacTubeApp: App {
         WindowGroup(for: TabRequest.self) { $request in
             ContentView(url: request?.url ?? homeURL)
         }
-        .windowStyle(HiddenTitleBarWindowStyle())
         .commands {
             CommandGroup(after: .newItem) {
                 NewTabButton()
