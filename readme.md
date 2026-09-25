@@ -1,27 +1,28 @@
-# MacTube
+# MacTube 2
 
-![MacTube](https://i.imgur.com/IdCeRJF.png)
+Fork of [MacTube](https://github.com/ryan-mangeno/MacTube), a WebKit wrapper for YouTube on macOS, with content filters.
 
-MacTube is a webview wrapper for YouTube for Mac OS. 
+## Filters
 
-It was made for people who prefer Safari and don't want to have to open Chrome just to launch their official web app.
+Menu bar → **Filters** (or **MacTube 2 → Settings…**, ⌘,):
 
-[Download the latest version here.](https://github.com/diontron/MacTube/releases/download/1.0.1/MacTube.app.zip)
+- **Show Shorts** (⇧⌘1) — off hides Shorts shelves, Shorts in feeds/search, the Shorts sidebar entry, and redirects `/shorts/…` to Home.
+- **Show AI Videos** (⇧⌘2) — off blocks videos/Shorts carrying YouTube's AI disclosure label ("Made with AI — Sounds or visuals were altered or fully generated", or the older "Altered or synthetic content"). The video's page is fetched logged-out in English and checked for the label text, so it works whatever your YouTube language is.
+  - A blocked video shows an overlay with **Go back / Next Short** and **Watch anyway**.
+  - Channels caught with a labeled video are remembered and hidden from feeds. **Filters → Forget Learned AI Channels** clears that list.
 
-## Malicious Software Warning
+Limits: YouTube shows no AI label on feed thumbnails, so feed hiding relies on learned channels. Unlabeled AI content isn't detected. YouTube markup changes can break selectors.
 
-When you try and open MacTube for the first time, you will get this error:
+## Build
 
-> “MacTube” can’t be opened because Apple cannot check it for malicious software.
+Requires Xcode.
 
-Just click `OK`, then go to `Settings -> Security & Privacy`, and click the `Open Anyway` button.
+```bash
+./build-dmg.sh      # → "MacTube 2.dmg"
+```
 
-This app does not contain a virus or anything sketchy, it's just what Apple does for developers who have not registered with them.
+Or open `MacTube.xcodeproj` and press ⌘R. The app is ad-hoc signed ("Sign to Run Locally"). On first launch from the DMG, right-click → Open, or run `xattr -dr com.apple.quarantine "/Applications/MacTube 2.app"`.
 
-## Contributing
+## Debugging detection
 
-This app was created with SwiftUI.
-
-It is super simple right now, but more features may be added in the future.
-
-If you would like to add a feature, please feel free to submit a PR.
+On macOS 13.3+ the web view is inspectable: Safari → Develop → [your Mac] → MacTube 2. `window.__mt2` exposes `update({showShorts, showAI})` and `forgetChannels()`; learned channels are in `localStorage['mt2.aiChannels']`.
