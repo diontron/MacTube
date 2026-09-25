@@ -10,12 +10,19 @@ import WebKit
 
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
-    @StateObject private var browser = Browser()
+    @Environment(\.openWindow) private var openWindow
+    @StateObject private var browser: Browser
     @AppStorage(Pref.showShorts) private var showShorts = true
     @AppStorage(Pref.showAI) private var showAI = true
 
+    init(url: URL) {
+        _browser = StateObject(wrappedValue: Browser(url: url))
+    }
+
     var body: some View {
         WebView(webView: browser.webView)
+            .background(WindowTabbing())
+            .navigationTitle(browser.title)
             .toolbar {
                 Spacer()
                 
@@ -46,6 +53,12 @@ struct ContentView: View {
                 ? CGColor(red: 0.097, green: 0.097, blue: 0.097, alpha: 1)
                 : CGColor(red: 1, green: 1, blue: 1, alpha: 1)
             ))
+            .onAppear {
+                browser.openTab = { [weak b = browser] url in
+                    TabHost.pending = b?.webView.window
+                    openWindow(value: TabRequest(url: url))
+                }
+            }
             .onChange(of: showShorts) { _ in browser.apply(showShorts: showShorts, showAI: showAI) }
             .onChange(of: showAI) { _ in browser.apply(showShorts: showShorts, showAI: showAI) }
             .onReceive(NotificationCenter.default.publisher(for: .forgetAIChannels)) { _ in
@@ -55,15 +68,25 @@ struct ContentView: View {
 }
 
 /// Owns the web view so it survives SwiftUI re-renders (settings changes).
-final class Browser: ObservableObject {
+final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
     let webView = WKWebView()
+    @Published var title = "MacTube 2"
+    var openTab: ((URL) -> Void)?
+    private var titleObservation: NSKeyValueObservation?
 
-    init() {
+    init(url: URL) {
+        super.init()
         let defaults = UserDefaults.standard
         apply(showShorts: defaults.object(forKey: Pref.showShorts) as? Bool ?? true,
               showAI: defaults.object(forKey: Pref.showAI) as? Bool ?? true)
+        webView.navigationDelegate = self
+        webView.uiDelegate = self
         if #available(macOS 13.3, *) { webView.isInspectable = true }
-        webView.load(URLRequest(url: URL(string: "https://www.youtube.com")!))
+        titleObservation = webView.observe(\.title) { [weak self] webView, _ in
+            let title = webView.title ?? ""
+            DispatchQueue.main.async { self?.title = title.isEmpty ? "MacTube 2" : title }
+        }
+        webView.load(URLRequest(url: url))
     }
 
     /// Re-installs the filter script with current settings (for future page loads)
@@ -76,6 +99,56 @@ final class Browser: ObservableObject {
                                               injectionTime: .atDocumentStart,
                                               forMainFrameOnly: true))
         webView.evaluateJavaScript("window.__mt2 && window.__mt2.update(\(json))", completionHandler: nil)
+    }
+
+    // MARK: Links
+
+    /// Hosts that stay inside the app (YouTube itself and Google sign-in).
+    private static func isInternal(_ url: URL) -> Bool {
+        guard let host = url.host?.lowercased(), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return false }
+        let suffixes = ["youtube.com", "youtu.be", "youtube-nocookie.com", "gstatic.com", "googleusercontent.com"]
+        return suffixes.contains { host == $0 || host.hasSuffix("." + $0) }
+            || host.split(separator: ".").contains("google")
+    }
+
+    /// The real destination of YouTube's "redirect?q=" links (used in descriptions and comments).
+    private static func unwrapRedirect(_ url: URL) -> URL {
+        guard let host = url.host, host.hasSuffix("youtube.com"), url.path == "/redirect",
+              let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "q" })?.value,
+              let target = URL(string: q) else { return url }
+        return target
+    }
+
+    /// Routes a link: external → default browser, YouTube → new tab. Returns false if nothing was opened.
+    private func route(_ url: URL, newTab: Bool) -> Bool {
+        if ["about", "data", "blob", "javascript"].contains(url.scheme?.lowercased() ?? "") { return false }
+        let target = Browser.unwrapRedirect(url)
+        if !Browser.isInternal(target) {
+            NSWorkspace.shared.open(target)
+            return true
+        }
+        if newTab {
+            openTab?(target)
+            return true
+        }
+        return false
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Only top-level navigations; iframes (embeds, ads, sign-in helpers) load normally.
+        guard let url = action.request.url, action.targetFrame?.isMainFrame == true else {
+            return decisionHandler(.allow)
+        }
+        let newTab = action.navigationType == .linkActivated && action.modifierFlags.contains(.command)
+        decisionHandler(route(url, newTab: newTab) ? .cancel : .allow)
+    }
+
+    /// target="_blank" / window.open links.
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                 for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = action.request.url { _ = route(url, newTab: true) }
+        return nil
     }
 }
 

@@ -13,9 +13,15 @@ Menu bar → **Filters** (or **MacTube 2 → Settings…**, ⌘,):
 
 Limits: YouTube shows no AI label on feed thumbnails, so feed hiding relies on learned channels. Unlabeled AI content isn't detected. YouTube markup changes can break selectors.
 
+## Tabs and links
+
+- **⌘T** opens a new native tab (Window → Show Tab Bar / Merge All Windows work as usual); **⌘N** opens a separate window.
+- ⌘-click a YouTube link, or open one that targets a new window, to get it in a new tab.
+- Links leaving YouTube (including YouTube's `redirect?q=` links in descriptions and comments) open in your default browser. Google sign-in stays in the app.
+
 ## Build
 
-Requires Xcode.
+Requires Xcode and macOS 13+.
 
 ```bash
 ./build-dmg.sh      # → "MacTube 2.dmg"
