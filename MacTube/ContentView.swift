@@ -21,6 +21,7 @@ struct ContentView: View {
 
     var body: some View {
         WebView(webView: browser.webView)
+            .safeAreaInset(edge: .top, spacing: 0) { UpdateBanner() }
             .background(WindowTabbing())
             .navigationTitle("MacTube 2")
             .navigationSubtitle(browser.title)

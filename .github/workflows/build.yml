@@ -18,6 +18,8 @@ jobs:
 
       - name: Build app and DMG
         run: bash build-dmg.sh
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}  # becomes the app's build number, used by the update check
 
       - uses: actions/upload-artifact@v4
         with:
@@ -33,5 +35,6 @@ jobs:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('build-{0}', github.run_number) }}
           name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('Build {0}', github.run_number) }}
           target_commitish: ${{ github.sha }}
+          body: Build ${{ github.run_number }}
           make_latest: true
           files: MacTube2.dmg
