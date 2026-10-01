@@ -65,7 +65,15 @@ struct ContentView: View {
 
 /// Owns the web view so it survives SwiftUI re-renders (settings changes).
 final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
-    let webView = TabWebView()
+    let webView: TabWebView = {
+        // WKWebView's default user agent lacks the "Version/… Safari/…" part, so YouTube's
+        // live chat treats it as an outdated browser. Identify as the installed Safari.
+        let safari = Bundle(path: "/Applications/Safari.app")?
+            .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "26.0"
+        let configuration = WKWebViewConfiguration()
+        configuration.applicationNameForUserAgent = "Version/\(safari) Safari/605.1.15"
+        return TabWebView(frame: .zero, configuration: configuration)
+    }()
     @Published var title = ""
     var openTab: ((URL) -> Void)?
     private var titleObservation: NSKeyValueObservation?
