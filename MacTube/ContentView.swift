@@ -64,7 +64,7 @@ struct ContentView: View {
 
 /// Owns the web view so it survives SwiftUI re-renders (settings changes).
 final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
-    let webView = WKWebView()
+    let webView = TabWebView()
     @Published var title = ""
     var openTab: ((URL) -> Void)?
     private var titleObservation: NSKeyValueObservation?
@@ -149,6 +149,31 @@ final class Browser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDeleg
                  for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if let url = action.request.url { _ = route(url, newTab: true) }
         return nil
+    }
+}
+
+/// Unloads the page when its window or tab closes. SwiftUI can keep a closed tab's
+/// view state alive, which left its video playing with no window to stop it.
+final class TabWebView: WKWebView {
+    private var closeObserver: NSObjectProtocol?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if let observer = closeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            closeObserver = nil
+        }
+        guard let window = window else { return }
+        closeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            self?.stopLoading()
+            self?.loadHTMLString("", baseURL: nil)
+        }
+    }
+
+    deinit {
+        if let observer = closeObserver { NotificationCenter.default.removeObserver(observer) }
     }
 }
 
