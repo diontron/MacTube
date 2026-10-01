@@ -59,3 +59,13 @@ jobs:
           body: Version ${{ steps.version.outputs.version }} · Build ${{ github.run_number }}
           make_latest: true
           files: MacTube2.dmg
+
+      # Old "Build N" releases (before versioned releases) are removed along with their tags.
+      - name: Remove pre-version releases
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for tag in $(gh release list --limit 100 --json tagName --jq '.[].tagName' | grep '^build-' || true); do
+            gh release delete "$tag" --cleanup-tag --yes
+          done
