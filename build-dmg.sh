@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 rm -rf build MacTube2.dmg
 xcodebuild -project MacTube.xcodeproj -target MacTube -configuration Release \
-  SYMROOT="$PWD/build" CODE_SIGN_IDENTITY=- CURRENT_PROJECT_VERSION="${BUILD_NUMBER:-0}" build
+  SYMROOT="$PWD/build" CODE_SIGN_IDENTITY=- CURRENT_PROJECT_VERSION="${BUILD_NUMBER:-0}" ${VERSION:+MARKETING_VERSION=$VERSION} build
 
 mkdir -p build/dmg
 cp -R "build/Release/MacTube 2.app" build/dmg/

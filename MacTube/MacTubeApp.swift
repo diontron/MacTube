@@ -66,11 +66,13 @@ final class Updater: ObservableObject {
 
     struct Release: Equatable {
         let build: Int
+        let version: String?
         let url: URL
     }
 
     @Published var available: Release?
     let currentBuild = Int(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "") ?? 0
+    let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
     private let api = URL(string: "https://api.github.com/repos/depo23/MacTube2/releases/latest")!
     private var timer: Timer?
 
@@ -90,14 +92,15 @@ final class Updater: ObservableObject {
                 } else if manual {
                     let alert = NSAlert()
                     alert.messageText = release == nil ? "Couldn't check for updates" : "MacTube 2 is up to date"
-                    alert.informativeText = release == nil ? "Check your connection and try again." : "You have the latest build (\(self.currentBuild))."
+                    alert.informativeText = release == nil ? "Check your connection and try again." : "You have the latest version (\(self.currentVersion))."
                     alert.runModal()
                 }
             }
         }.resume()
     }
 
-    /// Build number comes from the release's tag/name/body ("build-12", "Build 12");
+    /// Releases are compared by CI build number ("Build 12" in the notes, always increasing);
+    /// the version ("v2.3" tag) is only for display.
     /// the link prefers the DMG itself, falling back to the release page.
     private static func parse(_ data: Data) -> Release? {
         guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
@@ -107,7 +110,9 @@ final class Updater: ObservableObject {
               let build = Int(text[match].filter(\.isNumber)) else { return nil }
         let dmg = (json["assets"] as? [[String: Any]])?
             .first { ($0["name"] as? String)?.hasSuffix(".dmg") == true }?["browser_download_url"] as? String
-        return Release(build: build, url: dmg.flatMap(URL.init(string:)) ?? page)
+        let tag = json["tag_name"] as? String ?? ""
+        let version = tag.range(of: #"^v\d+(\.\d+)+$"#, options: .regularExpression).map { _ in String(tag.dropFirst()) }
+        return Release(build: build, version: version, url: dmg.flatMap(URL.init(string:)) ?? page)
     }
 }
 
@@ -119,7 +124,7 @@ struct UpdateBanner: View {
             HStack(spacing: 10) {
                 Image(systemName: "arrow.down.circle.fill")
                     .foregroundColor(.accentColor)
-                Text("A new version of MacTube 2 is available (Build \(release.build)).")
+                Text("MacTube 2 \(release.version ?? "build \(release.build)") is available.")
                 Spacer()
                 Button("Download") { NSWorkspace.shared.open(release.url) }
                     .buttonStyle(.borderedProminent)

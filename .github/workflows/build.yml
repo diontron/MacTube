@@ -10,31 +10,52 @@ on:
 permissions:
   contents: write
 
+# One release at a time, so two quick pushes can't pick the same version number.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # tags, to find the last version
+
+      # Next version = last vX.Y tag + 0.1 in the minor (2.1, 2.2 … 2.10). Pushing a tag like v3.0 sets a new base.
+      - name: Compute version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            last=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+$' | sed 's/^v//' | sort -t. -k1,1n -k2,2n | tail -1)
+            if [ -z "$last" ]; then v="2.1"; else v="${last%%.*}.$(( ${last#*.} + 1 ))"; fi
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Version $v"
 
       - name: Build app and DMG
         run: bash build-dmg.sh
         env:
-          BUILD_NUMBER: ${{ github.run_number }}  # becomes the app's build number, used by the update check
+          BUILD_NUMBER: ${{ github.run_number }}  # app build number; the update check compares these
+          VERSION: ${{ steps.version.outputs.version }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: MacTube2-dmg
           path: MacTube2.dmg
 
-      # Every push to master (or a v* tag) becomes the "latest" release,
+      # Every push to master (or a v* tag) becomes the "latest" release (tag vX.Y),
       # so the README download link always points at the newest build.
       - name: Publish release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('build-{0}', github.run_number) }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('Build {0}', github.run_number) }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: MacTube 2 v${{ steps.version.outputs.version }}
           target_commitish: ${{ github.sha }}
-          body: Build ${{ github.run_number }}
+          body: Version ${{ steps.version.outputs.version }} · Build ${{ github.run_number }}
           make_latest: true
           files: MacTube2.dmg
